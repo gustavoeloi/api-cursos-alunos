@@ -7,9 +7,8 @@ const port = 3333;
 const app = express();
 
 app.use(express.json());
+app.use(routes);
 
 app.use(errorHandling);
-
-app.use(routes);
 
 app.listen(port, () => console.log(`Server is running on port ${port}`));
