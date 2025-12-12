@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-import { knex } from "@/database/knexconfig";
+import { knexConnection } from "@/database/knexconfig";
 
 import { z } from "zod";
 import { AppError } from "@/utils/AppError";
@@ -8,7 +8,7 @@ import { AppError } from "@/utils/AppError";
 class StudentController {
   async index(request: Request, response: Response, next: NextFunction) {
     try {
-      const students = await knex<StudentRepository>("students")
+      const students = await knexConnection<StudentRepository>("students")
         .select()
         .orderBy("name", "asc");
 
@@ -21,13 +21,13 @@ class StudentController {
   async create(request: Request, response: Response, next: NextFunction) {
     try {
       const studentSchema = z.object({
-        name: z.string().min(6),
+        name: z.string().trim().min(6),
         email: z.string().email(),
       });
 
       const { name, email } = studentSchema.parse(request.body);
 
-      const student = await knex<StudentRepository>("students")
+      const student = await knexConnection<StudentRepository>("students")
         .where({
           email,
         })
@@ -37,7 +37,10 @@ class StudentController {
         throw new AppError("the email has already been used");
       }
 
-      await knex<StudentRepository>("students").insert({ name, email });
+      await knexConnection<StudentRepository>("students").insert({
+        name,
+        email,
+      });
 
       return response.status(201).json();
     } catch (error) {
@@ -50,13 +53,13 @@ class StudentController {
       const { id } = request.params;
 
       const studentSchema = z.object({
-        name: z.string().min(6).optional(),
+        name: z.string().trim().min(6).optional(),
         email: z.string().email().optional(),
       });
 
       const { name, email } = studentSchema.parse(request.body);
 
-      const student = await knex<StudentRepository>("students")
+      const student = await knexConnection<StudentRepository>("students")
         .select()
         .where("id", id)
         .first();
@@ -66,7 +69,7 @@ class StudentController {
       }
 
       if (email) {
-        const student = await knex<StudentRepository>("students")
+        const student = await knexConnection<StudentRepository>("students")
           .select()
           .where("email", email)
           .first();
@@ -76,7 +79,7 @@ class StudentController {
         }
       }
 
-      await knex<StudentRepository>("students")
+      await knexConnection<StudentRepository>("students")
         .where("id", id)
         .update({ name, email });
 
@@ -90,13 +93,15 @@ class StudentController {
     try {
       const { id } = request.params;
 
-      const student = await knex<StudentRepository>("students").select();
+      const student = await knexConnection<StudentRepository>(
+        "students"
+      ).select();
 
       if (!student) {
         throw new AppError("the student id does not exists");
       }
 
-      await knex<StudentRepository>("students").where("id", id).del();
+      await knexConnection<StudentRepository>("students").where("id", id).del();
 
       return response.status(204).json();
     } catch (error) {
