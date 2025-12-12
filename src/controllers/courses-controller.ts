@@ -61,7 +61,8 @@ class CourseController {
       if (name) {
         const course = await knexConnection<CourseRepository>("courses")
           .select()
-          .where("name", name);
+          .where("name", name)
+          .first();
 
         if (course) {
           throw new AppError(
@@ -71,7 +72,7 @@ class CourseController {
       }
 
       await knexConnection<CourseRepository>("courses")
-        .insert({ name, description })
+        .update({ name, description, updated_at: knexConnection.fn.now() })
         .where("id", id);
 
       return response.status(204).json();

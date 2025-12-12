@@ -81,7 +81,7 @@ class StudentController {
 
       await knexConnection<StudentRepository>("students")
         .where("id", id)
-        .update({ name, email });
+        .update({ name, email, updated_at: knexConnection.fn.now() });
 
       return response.json();
     } catch (error) {
