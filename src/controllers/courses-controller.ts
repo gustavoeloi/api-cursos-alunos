@@ -48,8 +48,6 @@ class CourseController {
 
       const { name, description } = bodySchema.parse(request.body);
 
-      console.log(name, description);
-
       const course = await knexConnection<CourseRepository>("courses")
         .select()
         .where("id", id);
@@ -74,6 +72,27 @@ class CourseController {
       await knexConnection<CourseRepository>("courses")
         .update({ name, description, updated_at: knexConnection.fn.now() })
         .where("id", id);
+
+      return response.status(204).json();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async remove(request: Request, response: Response, next: NextFunction) {
+    try {
+      const { id } = request.params;
+
+      const course = await knexConnection<CourseRepository>("courses")
+        .select()
+        .where("id", id)
+        .first();
+
+      if (!course) {
+        throw new AppError("the course id doest not exists");
+      }
+
+      await knexConnection<CourseRepository>("courses").where("id", id).del();
 
       return response.status(204).json();
     } catch (error) {
