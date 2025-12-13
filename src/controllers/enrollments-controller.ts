@@ -5,7 +5,7 @@ import { AppError } from "@/utils/AppError";
 import z from "zod";
 
 class EnrollmentsController {
-  async index(request: Request, response: Response, next: NextFunction) {
+  async indexCourse(request: Request, response: Response, next: NextFunction) {
     try {
       const { courseId } = request.params;
 
@@ -22,6 +22,30 @@ class EnrollmentsController {
         .select()
         .join("enrollments", "students.id", "enrollments.student_id")
         .where("enrollments.course_id", courseId);
+
+      return response.json(courses);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async indexStudent(request: Request, response: Response, next: NextFunction) {
+    try {
+      const { studentId } = request.params;
+
+      const course = await knexConnection<CourseRepository>("students")
+        .select()
+        .where("id", studentId)
+        .first();
+
+      if (!course) {
+        throw new AppError("The student id does not exists");
+      }
+
+      const courses = await knexConnection<StudentRepository>("courses")
+        .select()
+        .join("enrollments", "courses.id", "enrollments.course_id")
+        .where("enrollments.student_id", studentId);
 
       return response.json(courses);
     } catch (error) {
